@@ -12,5 +12,11 @@ except socket.error as err:
     print(err)
     sys.exit(1)
 
+try:
+    while True:
+        username = input("Enter username: ")
+        sock.sendall(username.encode())
+except Exception as e:
+    print("Error:", e)
 
         
