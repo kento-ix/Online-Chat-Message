@@ -19,4 +19,21 @@ try:
 except Exception as e:
     print("Error:", e)
 
-        
+try:
+    while True:
+        message = input("Send message")
+        sock.sendall(message.encode())
+
+        username_other = sock.recv(255) # receive user name
+        data = sock.recv(4096) # receive message from other user
+        if data:
+            print("Message from", username_other.decode(), ": ",  data.decode())            
+        else:
+            break
+
+except Exception as e:
+    print("Erro:", e)
+
+finally:
+    print('closing connection')
+    sock.close()        
