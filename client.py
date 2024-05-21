@@ -1,56 +1,24 @@
 import socket
-import sys
-import time
 
-TIMEOUT_THRESHOLD = 120
+server_address = ('localhost', 12345)
 
-last_activate_time = time.time()
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) #using UDP network socke
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-server_address = '/tmp/socket_file'
-print('connecting to {}' .format(server_address))
+username = input("Enter username: ")
+message = input("Enter message: ")
 
-# Automatically connecting to server so dont need this part
-#try:
-#    sock.connect(server_address)
-#    print('Success connecting to server.')
-#except socket.error as err:
-#    print(err)
-#    sys.exit(1)
+usernamelen = len(username)
+if usernamelen > 255:
+    raise ValueError("Too long username.")
 
-#First action by user
+packet = bytes([usernamelen]) + username.encode() + message.encode()
+
 try:
-    while True:
-        username = input("Enter username: ") 
-        sock.sendto(username.encode(), server_address) #send user name
-        break
-except Exception as e:
-    print("Error:", e)
+    sent = sock.sendto(packet, server_address)
 
-#Second action by user
-try:
-    while True:
-        message = input("Send message: ")
-        sock.sendto(message.encode(), server_address) #send message
-
-        username_other, server = sock.recvfrom(255) # receive user name
-        data, server = sock.recvfrom(4096) # receive message from other user
-        if data:
-            if username_other == username:
-                print("You: ", data)
-            else:
-                print(username_other, ": ", data)            
-            last_activity_time = time.time()
-        else:
-            break
-
-        if time.time() - last_activity_time > TIMEOUT_THRESHOLD:
-            print("Client has been inactive for too long. Removing from relay system.")
-            break
-
-except Exception as e:
-    print("Erro:", e)
+    data, server = sock.recvfrom(4096)
+    print(data.decode())
 
 finally:
-    print('closing connection')
-    sock.close()        
+    print("Socket close")
+    sock.close()

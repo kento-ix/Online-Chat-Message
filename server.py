@@ -1,30 +1,24 @@
 import socket
-import os
+server_address = ('localhost', 12345)
 
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-server_address = '/tmp/socket_file'
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-try:
-    os.unlink(server_address)
-except FileNotFoundError:
-    pass
-
-print('Starting up on {}' .format(server_address))
 sock.bind(server_address)
 
+print('start up server')
+
+usernames = {}
+
 while True:
-    while True:
-        name, client_address = sock.recvfrom(255) #receive user name
-        message , client_address = sock.recvfrom(4096) #receive user message
+    data, address = sock.recvfrom(4096)
+    usernamelen = data[0]
+    username = data[1: 1+usernamelen].decode()
+    message = data[1+usernamelen:].decode()
+    print(f"user name: {username} from: {address} message: {message}")
 
-        if message:
-                print(name, ": ", message)
-                #name_bytes = name.encode() # convet name to byte
-                #message_bytes = message.encode() #convert message to byte
-                sock.sendto(name, client_address)
-                sock.sendto(message, client_address)                
-        else:
-            print('No message received, clietn disconnected')
-            break
+    if address not in usernames:
+        usernames[address] = username
+        print(f"username '{username}' saved. current user: {username}")
 
-    print("Closing current connection.")
+        response_message = f"{username}: {message}"
+        sock.sendto(response_message.encode(), address)
